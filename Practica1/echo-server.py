@@ -2,7 +2,7 @@
 from datetime import datetime
 import socket
 import time
-HOST = "192.168.100.20"  # Standard loopback interface address (localhost)
+HOST = "192.168.1.1"  # Standard loopback interface address (localhost)
 PORT = 65432  # Port to listen on (non-privileged ports are > 1023)
 buffer_size = 1024
 men = ""
@@ -104,8 +104,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as TCPServerSocket:
                     y = int(data)
                     print(str(x)+","+str(y))
                     # evaluar bomba
+
                     flag = True
-                    if tAM[x-1][y-1] == "*":
+                    if tA[x-1][y-1] == "X":
+                        flag = False
+                        print("Tiro "+str(x)+","+str(y)+" repetido")
+                    elif tAM[x-1][y-1] == "*":
                         flag = True
                         tA[x - 1][y - 1] = "X"
                         numtP = numtP - 1
@@ -162,7 +166,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as TCPServerSocket:
                     print(str(x) + "," + str(y))
                     # evaluar bomba
                     flag = True
-                    if tBM[x - 1][y - 1] == "*":
+                    if tB[x-1][y-1] == "X":
+                        flag = False
+                        print("Tiro "+str(x)+","+str(y)+" repetido")
+                    elif tBM[x - 1][y - 1] == "*":
                         flag = True
                         tB[x - 1][y - 1] = "X"
                         numtA = numtA - 1
