@@ -2,7 +2,7 @@
 
 import socket
 
-HOST = "192.168.1.1"  # The server's hostname or IP address
+HOST = "10.100.78.15"  # The server's hostname or IP address
 PORT = 65432  # The port used by the server
 buffer_size = 1024
 
