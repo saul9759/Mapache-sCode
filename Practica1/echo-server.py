@@ -2,7 +2,8 @@
 from datetime import datetime
 import socket
 import time
-HOST = "192.168.1.1"  # Standard loopback interface address (localhost)
+import random
+HOST = "10.100.78.15"  # Standard loopback interface address (localhost)
 PORT = 65432  # Port to listen on (non-privileged ports are > 1023)
 buffer_size = 1024
 men = ""
@@ -25,26 +26,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as TCPServerSocket:
             if not data:
                 break
             # principiante
-            tA = [["0", "0", "0", "0", "0", "0", "0", "0", "0"],
-                  ["0", "0", "0", "0", "0", "0", "0", "0", "0"],
-                  ["0", "0", "0", "0", "0", "0", "0", "0", "0"],
-                  ["0", "0", "0", "0", "0", "0", "0", "0", "0"],
-                  ["0", "0", "0", "0", "0", "0", "0", "0", "0"],
-                  ["0", "0", "0", "0", "0", "0", "0", "0", "0"],
-                  ["0", "0", "0", "0", "0", "0", "0", "0", "0"],
-                  ["0", "0", "0", "0", "0", "0", "0", "0", "0"],
-                  ["0", "0", "0", "0", "0", "0", "0", "0", "0"]]
-
-            tAM = [["*", "", "", "", "", "", "", "", "*"],
-                  ["", "*", "", "", "", "", "", "", ""],
-                  ["", "", "*", "", "", "", "", "", ""],
-                  ["", "", "", "*", "", "", "", "", ""],
-                  ["", "", "", "", "*", "", "", "", ""],
-                  ["", "", "", "", "", "*", "", "", ""],
-                  ["", "", "", "", "", "", "*", "", ""],
-                  ["", "", "", "", "", "", "", "*", ""],
-                  ["", "", "", "", "", "", "", "", "*"]]
-            # avanzado
+            # generacion dinamica para avanzado y minas aleatorias
             tB = [["0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
                   ["0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
                   ["0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
@@ -61,150 +43,102 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as TCPServerSocket:
                   ["0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
                   ["0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
                   ["0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"]]
-            tBM = [["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "*"],
-                  ["", "*", "", "", "", "", "", "", "", "", "", "", "", "", "*", "*"],
-                  ["", "", "*", "", "", "", "", "", "", "", "", "", "", "*", "", "*"],
-                  ["", "", "", "*", "", "", "", "", "", "", "", "", "*", "", "", "*"],
-                  ["", "", "", "", "*", "", "", "", "", "", "", "*", "", "", "", "*"],
-                  ["", "", "", "", "", "*", "", "", "", "", "*", "", "", "", "", "*"],
-                  ["", "", "", "", "", "", "*", "", "", "*", "", "", "", "", "", "*"],
-                  ["", "", "", "", "", "", "", "*", "*", "", "", "", "", "", "", "*"],
-                  ["", "", "", "", "", "", "", "*", "*", "", "", "", "", "", "", "*"],
-                  ["", "", "", "", "", "", "*", "", "", "*", "", "", "", "", "", ""],
-                  ["", "", "", "", "", "*", "", "", "", "", "*", "", "", "", "", ""],
-                  ["", "", "", "", "*", "", "", "", "", "", "", "*", "", "", "", ""],
-                  ["", "", "", "*", "", "", "", "", "", "", "", "", "*", "", "", ""],
-                  ["", "", "*", "", "", "", "", "", "", "", "", "", "", "*", "", ""],
-                  ["", "*", "", "", "", "", "", "", "", "", "", "", "", "", "*", ""],
-                  ["*", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "*"]]
             # print("Enviando respuesta a", Client_addr)
             # print("Estado: sendall\nMensaje: PSH,ACK\n\n")
             # principiante
+
+            tablero = []
+
             x = 0
             y = 0
-            numtP = 71
-            numtA = 216
+            tam = 0
+            min =0
+            numt = 0
+
             instanteInicial = datetime.now()
             # --------------------------------Principiante----------------------------------------
             if int(data) == 1:
+                tam = 9
+                min = 10
+                numt = 71
+            else:
+                tam = 16
+                min = 40
+                numt = 216
+            # Generar bombas
+            x1 =0
+            y1=0
+            cont =0
+            while True:
+                x = random.randrange(tam)
+                y = random.randrange(tam)
+                if str(tB[x][y]) == "0":
+                    tB[x][y] = "*";
+                    cont = cont+1
+                if cont == min:
+                    break
 
-                while True:
-                    for i in range(len(tA)):
-                        for j in range(len(tA[i])):
-                            men += str(tA[i][j])+" "
-                        men +="\n"
-                    print(men +"\n")
+            while True:
+                for i in range(tam):
+                    for j in range(tam):
+                        if str(tB[i][j]) == "*":
+                            men += "0 "
+                        else:
+                            men += str(tB[i][j])+" "
+                    men +="\n"
+                print(men +"\n")
+                Client_conn.sendall(men.encode('utf-8'))
+                men = ""
+                print("Esperando x")
+                data = Client_conn.recv(buffer_size)
+                x = int(data)
+                print("Esperando y")
+                data = Client_conn.recv(buffer_size)
+                y = int(data)
+                print(str(x)+","+str(y))
+                # evaluar bomba
+
+                flag = True
+                if tB[x-1][y-1] == "X":
+                    flag = False
+                    print("Tiro "+str(x)+","+str(y)+" repetido")
+                elif tB[x-1][y-1] == "*":
+                    flag = True
+                    tB[x - 1][y - 1] = "X*"
+                    numt = numt - 1
+
+                else:
+                    flag = False
+                    tB[x - 1][y - 1] = "X"
+                    numt = numt - 1
+                # si perdioperdio
+                if flag:
+                    print("Valio, perdiste")
+                    # TCPClientSocket.sendall(b"PERDISTE")
+
+                    men = "PERDISTE"
                     Client_conn.sendall(men.encode('utf-8'))
                     men = ""
-                    print("Esperando x")
-                    data = Client_conn.recv(buffer_size)
-                    x = int(data)
-                    print("Esperando y")
-                    data = Client_conn.recv(buffer_size)
-                    y = int(data)
-                    print(str(x)+","+str(y))
-                    # evaluar bomba
+                    for i in range(tam):
+                        for j in range(tam):
+                            men += str(tB[i][j]) + " "
+                        men += "\n"
+                    Client_conn.sendall(men.encode('utf-8'))
+                    men = ""
 
-                    flag = True
-                    if tA[x-1][y-1] == "X":
-                        flag = False
-                        print("Tiro "+str(x)+","+str(y)+" repetido")
-                    elif tAM[x-1][y-1] == "*":
-                        flag = True
-                        tA[x - 1][y - 1] = "X"
-                        numtP = numtP - 1
-
-                    else:
-                        flag = False
-                        tA[x - 1][y - 1] = "X"
-                        numtP = numtP-1
-                    # si perdioperdio
-                    if flag:
-                        print("Valio, perdiste")
-                        # TCPClientSocket.sendall(b"PERDISTE")
-
-                        men = "PERDISTE"
-                        Client_conn.sendall(men.encode('utf-8'))
-                        men = ""
-                        for i in range(len(tA)):
-                            for j in range(len(tA[i])):
-                                men += str(tA[i][j]) + str(tAM[i][j]) + " "
-                            men += "\n"
-                        Client_conn.sendall(men.encode('utf-8'))
-                        men = ""
-
-                        break
-                    if numtP == 0:
-                        # TCPClientSocket.sendall(b"GANASTE")
+                    break
+                if numt == 0:
+                    # TCPClientSocket.sendall(b"GANASTE")
 
 
-                        men = "GANASTE"
-                        Client_conn.sendall(men.encode('utf-8'))
-                        men = ""
-                        for i in range(len(tA)):
-                            for j in range(len(tA[i])):
-                                men += str(tA[i][j]) + " "
-                            men += "\n"
-                        Client_conn.sendall(men.encode('utf-8'))
-
-            # --------------------------------Avanzado----------------------------------------
-            else:
-                while True:
+                    men = "GANASTE"
+                    Client_conn.sendall(men.encode('utf-8'))
+                    men = ""
                     for i in range(len(tB)):
                         for j in range(len(tB[i])):
                             men += str(tB[i][j]) + " "
                         men += "\n"
-                    print(men + "\n")
                     Client_conn.sendall(men.encode('utf-8'))
-                    men = ""
-                    print("Esperando x")
-                    data = Client_conn.recv(buffer_size)
-                    x = int(data)
-                    print("Esperando y")
-                    data = Client_conn.recv(buffer_size)
-                    y = int(data)
-                    print(str(x) + "," + str(y))
-                    # evaluar bomba
-                    flag = True
-                    if tB[x-1][y-1] == "X":
-                        flag = False
-                        print("Tiro "+str(x)+","+str(y)+" repetido")
-                    elif tBM[x - 1][y - 1] == "*":
-                        flag = True
-                        tB[x - 1][y - 1] = "X"
-                        numtA = numtA - 1
-
-                    else:
-                        flag = False
-                        tB[x - 1][y - 1] = "X"
-                        numtA = numtA - 1
-                    # si perdioperdio
-                    if flag:
-                        print("Valio, perdiste")
-                        # TCPClientSocket.sendall(b"PERDISTE")
-
-                        men = "PERDISTE"
-                        Client_conn.sendall(men.encode('utf-8'))
-                        men = ""
-                        for i in range(len(tB)):
-                            for j in range(len(tB[i])):
-                                men += str(tB[i][j]) + str(tBM[i][j]) + " "
-                            men += "\n"
-                        Client_conn.sendall(men.encode('utf-8'))
-                        men = ""
-
-                        break
-                    if numtA == 0:
-                        # TCPClientSocket.sendall(b"GANASTE")
-
-                        men = "GANASTE"
-                        Client_conn.sendall(men.encode('utf-8'))
-                        men = ""
-                        for i in range(len(tB)):
-                            for j in range(len(tB[i])):
-                                men += str(tB[i][j]) + " "
-                            men += "\n"
-                        Client_conn.sendall(men.encode('utf-8'))
 
             instanteFinal = datetime.now()
             tiempo = instanteFinal - instanteInicial  # Devuelve un objeto timedelta
